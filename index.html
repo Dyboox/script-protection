@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Private Script Protection</title>
+<style>
+body{background:#070b14;color:white;font-family:sans-serif;margin:0}
+.center{display:flex;justify-content:center;align-items:center;height:100vh}
+.card{background:#0b1220;padding:20px;border-radius:16px;width:90%;max-width:400px}
+input,textarea{width:100%;margin-top:10px;padding:10px;border-radius:10px;border:none;background:#111827;color:white}
+button{margin-top:10px;padding:10px;width:100%;border:none;border-radius:10px;background:#10b981;color:white;font-weight:bold}
+</style>
+</head>
+<body>
+
+<div id="loginPage" class="center">
+  <div class="card">
+    <h2>ENTER PASSWORD</h2>
+    <input id="ownerPass" placeholder="Password">
+    <button onclick="login()">Open</button>
+  </div>
+</div>
+
+<div id="dashboard" style="display:none;padding:20px">
+  <button onclick="showTab('create')">Create New</button>
+  <button onclick="showTab('history')">My History</button>
+
+  <div id="createPage">
+    <input id="name" placeholder="Script Name">
+    <textarea id="code" placeholder="Paste Lua"></textarea>
+    <button onclick="createScript()">Generate</button>
+    <div id="loadstringResult"></div>
+  </div>
+
+  <div id="historyPage" style="display:none">
+    <div id="history"></div>
+  </div>
+</div>
+
+<script>
+const OWNER_PASSWORD="pitrah";
+
+function login(){
+  if(ownerPass.value===OWNER_PASSWORD){
+    loginPage.style.display="none";
+    dashboard.style.display="block";
+    showTab("create");
+  } else alert("Wrong password");
+}
+
+function showTab(tab){
+  createPage.style.display=tab==="create"?"block":"none";
+  historyPage.style.display=tab==="history"?"block":"none";
+  if(tab==="history") loadHistory();
+}
+
+async function createScript(){
+  const res=await fetch("/api/create",{method:"POST"});
+  const data=await res.json();
+  const loadstring=`loadstring(game:HttpGet("${location.origin}/api/script?id=${data.id}"))()`;
+
+  loadstringResult.innerHTML=
+  `<div style="margin-top:15px;background:#020617;padding:10px;border-radius:10px">
+    <div id="generated">${loadstring}</div>
+    <button onclick="navigator.clipboard.writeText(document.getElementById('generated').innerText)">Copy</button>
+  </div>`;
+}
+
+async function loadHistory(){
+  const res=await fetch("/api/history");
+  const data=await res.json();
+  history.innerHTML=data.map(x=>`<div>${x.id}</div>`).join("");
+}
+</script>
+
+</body>
+</html>
